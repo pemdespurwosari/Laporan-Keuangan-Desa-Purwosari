@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Realisasi APBDes - Desa Purwosari</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .tab-btn.active {
+            border-bottom: 3px solid #16a34a;
+            color: #16a34a;
+            font-weight: 600;
+        }
+        /* Custom Scrollbar for tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                        <i class="fa-solid fa-landmark"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Dashboard Realisasi APBDes <span id="header-year-title">2026</span></h1>
+                        <p class="text-xs md:text-sm text-slate-500">Pemerintah Desa Purwosari • Transparansi Pengelolaan Dana Desa</p>
+                    </div>
+                </div>
+
+                <!-- Year Filter Selector 2026 - 2030 -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center text-xs text-slate-700 shadow-sm">
+                        <i class="fa-regular fa-calendar-check mr-2 text-brand-600 text-sm"></i>
+                        <label for="selectTahun" class="font-medium mr-2 whitespace-nowrap">Tahun Dashboard:</label>
+                        <select id="selectTahun" onchange="changeYearFilter(this.value)" class="bg-white border border-slate-300 text-slate-800 font-bold text-xs rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer">
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
+
+        <!-- Banner Deskripsi Ringkas -->
+        <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+            <div class="relative z-10 max-w-3xl">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span class="inline-block bg-brand-500/20 text-brand-300 text-xs font-semibold px-3 py-1 rounded-full border border-brand-500/30">
+                        <i class="fa-solid fa-table mr-1.5"></i> Data Terintegrasi Google Sheet
+                    </span>
+                    <span id="data-status-badge" class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-700/80 text-slate-300 border border-slate-600">
+                        <i class="fa-solid fa-spinner fa-spin mr-1.5 text-[10px]"></i> Memuat Data...
+                    </span>
+                </div>
+                <h2 class="text-lg md:text-xl font-bold mb-1">Ringkasan Serapan & Realisasi Anggaran <span class="badge-year-text">2026</span></h2>
+                <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                    Dashboard ini menampilkan capaian pendapatan dan belanja, peta bidang, serta daftar kegiatan yang disusun secara transparan untuk mendukung akuntabilitas desa.
+                </p>
+            </div>
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-white pointer-events-none">
+                <i class="fa-solid fa-chart-line text-[180px]"></i>
+            </div>
+        </div>
+
+        <!-- Section KPI Cards Ringkasan APBDes -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Card Pendapatan -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-sm">Pendapatan Desa</h3>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 border border-emerald-200" id="badge-capaian-pendapatan">0%</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs text-slate-500">Anggaran Pendapatan</p>
+                        <p class="text-base font-bold text-slate-900" id="val-anggaran-pendapatan">Rp 0</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
+                        <div>
+                            <p class="text-[11px] text-slate-500">Realisasi</p>
+                            <p class="text-sm font-semibold text-emerald-600" id="val-realisasi-pendapatan">Rp 0</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-500">Sisa / Selisih</p>
+                            <p class="text-sm font-semibold text-slate-600" id="val-sisa-pendapatan">Rp 0</p>
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" id="bar-pendapatan" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Belanja -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-sm">Belanja Desa</h3>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-50 text-blue-700 border border-blue-200" id="badge-capaian-belanja">0%</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs text-slate-500">Anggaran Belanja</p>
+                        <p class="text-base font-bold text-slate-900" id="val-anggaran-belanja">Rp 0</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
+                        <div>
+                            <p class="text-[11px] text-slate-500">Realisasi</p>
+                            <p class="text-sm font-semibold text-blue-600" id="val-realisasi-belanja">Rp 0</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-500">Sisa Belanja</p>
+                            <p class="text-sm font-semibold text-slate-600" id="val-sisa-belanja">Rp 0</p>
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full rounded-full transition-all duration-500" id="bar-belanja" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Pembiayaan -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-coins"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-sm">Pembiayaan Desa</h3>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-50 text-amber-700 border border-amber-200" id="badge-capaian-pembiayaan">0%</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs text-slate-500">Anggaran Pembiayaan Netto</p>
+                        <p class="text-base font-bold text-slate-900" id="val-anggaran-pembiayaan">Rp 0</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
+                        <div>
+                            <p class="text-[11px] text-slate-500">Realisasi</p>
+                            <p class="text-sm font-semibold text-amber-600" id="val-realisasi-pembiayaan">Rp 0</p>
+                        </div>
+                        <div>
+                            <p class="text-[11px] text-slate-500">Sisa Pembiayaan</p>
+                            <p class="text-sm font-semibold text-slate-600" id="val-sisa-pembiayaan">Rp 0</p>
+                        </div>
+                    </div>
+                    <!-- Progress bar -->
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-amber-500 h-full rounded-full transition-all duration-500" id="bar-pembiayaan" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Visualisasi Grafis (Chart Bidang Belanja, Kelompok Pendapatan & Kelompok Pembiayaan) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Realisasi per Bidang (Donut Chart) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Realisasi per Bidang Belanja</h3>
+                    <p class="text-xs text-slate-500 mb-4">Proporsi dan serapan realisasi pada setiap bidang kegiatan desa.</p>
+                </div>
+                <div class="relative w-full h-64 flex items-center justify-center">
+                    <canvas id="chartBidang"></canvas>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 gap-2 text-xs" id="legend-bidang">
+                    <!-- Dynamic Legend Inserted Here -->
+                </div>
+            </div>
+
+            <!-- Realisasi Pendapatan per Kelompok (Bar Chart) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Realisasi Pendapatan per Kelompok</h3>
+                    <p class="text-xs text-slate-500 mb-4">Perbandingan target anggaran dan realisasi kelompok pendapatan.</p>
+                </div>
+                <div class="relative w-full h-64">
+                    <canvas id="chartPendapatan"></canvas>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-end space-x-4 text-xs">
+                    <div class="flex items-center"><span class="w-3 h-3 rounded bg-emerald-500 mr-1.5"></span> Realisasi</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded bg-slate-200 mr-1.5"></span> Target Anggaran</div>
+                </div>
+            </div>
+
+            <!-- Realisasi Pembiayaan per Kelompok (Bar Chart - Ungu) -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Realisasi Pembiayaan per Kelompok</h3>
+                    <p class="text-xs text-slate-500 mb-4">Klik batang pembiayaan untuk melihat rincian penerimaan atau pengeluaran pembiayaan.</p>
+                </div>
+                <div class="relative w-full h-64">
+                    <canvas id="chartPembiayaan"></canvas>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-end space-x-4 text-xs">
+                    <div class="flex items-center"><span class="w-3 h-3 rounded bg-purple-600 mr-1.5"></span> Realisasi</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded bg-slate-200 mr-1.5"></span> Target Anggaran</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Tab Navigasi & Data Rincian Table -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Nav Tabs Header -->
+            <div class="flex border-b border-slate-200 bg-slate-50/80 px-6 pt-3 overflow-x-auto gap-8">
+                <button onclick="switchTab('kegiatan')" id="tab-kegiatan" class="tab-btn active pb-3 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center">
+                    <i class="fa-solid fa-list-check mr-2"></i>Daftar Kegiatan Belanja
+                </button>
+                <button onclick="switchTab('pendapatan')" id="tab-pendapatan" class="tab-btn pb-3 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center">
+                    <i class="fa-solid fa-hand-holding-dollar mr-2"></i>Kelompok Pendapatan
+                </button>
+                <button onclick="switchTab('pembiayaan')" id="tab-pembiayaan" class="tab-btn pb-3 text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap flex items-center">
+                    <i class="fa-solid fa-arrow-right-arrow-left mr-2"></i>Kelompok Pembiayaan
+                </button>
+            </div>
+
+            <!-- Panel Container -->
+            <div class="p-6">
+                
+                <!-- HEADER DAFTAR KEGIATAN & FILTER (Disesuaikan Persis Seperti Referensi Foto) -->
+                <div id="section-kegiatan-header" class="mb-6 space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Daftar Kegiatan</h3>
+                            <p class="text-xs text-slate-500">Cari, filter, lalu klik judul kolom untuk sortir. Klik rincian untuk menelusuri item belanja.</p>
+                        </div>
+                        
+                        <!-- Control Filters Bar -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Search Box -->
+                            <div class="relative w-full sm:w-64">
+                                <input type="text" id="searchInput" onkeyup="filterTableData()" placeholder="Cari kegiatan atau bidang..." 
+                                    class="w-full pl-3 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition">
+                            </div>
+
+                            <!-- Dropdown Filter Bidang -->
+                            <select id="filterBidang" onchange="filterTableData()" class="bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                                <option value="all">Semua bidang</option>
+                                <option value="BIDANG PENYELENGGARAAN PEMERINTAHAN DESA">BIDANG PENYELENGGARAAN PEMERINTAHAN DESA</option>
+                                <option value="BIDANG PELAKSANAAN PEMBANGUNAN DESA">BIDANG PELAKSANAAN PEMBANGUNAN DESA</option>
+                                <option value="BIDANG PEMBINAAN KEMASYARAKATAN">BIDANG PEMBINAAN KEMASYARAKATAN</option>
+                                <option value="BIDANG PEMBERDAYAAN MASYARAKAT">BIDANG PEMBERDAYAAN MASYARAKAT</option>
+                                <option value="BIDANG PENANGGULANGAN BENCANA, DARURAT DAN MENDESAK DESA">BIDANG PENANGGULANGAN BENCANA, DARURAT DAN MENDESAK DESA</option>
+                            </select>
+
+                            <!-- Dropdown Filter Status Serapan -->
+                            <select id="filterCapaian" onchange="filterTableData()" class="bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                                <option value="all">Semua status serapan</option>
+                                <option value="high">> 75% (Tinggi)</option>
+                                <option value="mid">50% - 75% (Sedang)</option>
+                                <option value="low">< 50% (Rendah)</option>
+                            </select>
+
+                            <!-- Button Export -->
+                            <button onclick="exportToCSV()" class="px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-semibold transition flex items-center">
+                                <i class="fa-solid fa-file-excel mr-1.5"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Content Wrappers -->
+                <div class="overflow-x-auto">
+                    
+                    <!-- 1. TABEL KEGIATAN BELANJA (Struktur Kolom Sesuai Tangkapan Layar) -->
+                    <div id="panel-kegiatan">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                                    <th class="py-3 px-3 cursor-pointer select-none" onclick="sortTable('kegiatan', 0)">
+                                        Kode <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 cursor-pointer select-none" onclick="sortTable('kegiatan', 1)">
+                                        Bidang <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 cursor-pointer select-none" onclick="sortTable('kegiatan', 2)">
+                                        Kegiatan <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 text-right cursor-pointer select-none" onclick="sortTable('kegiatan', 3)">
+                                        Anggaran <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 text-right cursor-pointer select-none" onclick="sortTable('kegiatan', 4)">
+                                        Realisasi <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 text-center cursor-pointer select-none" onclick="sortTable('kegiatan', 5)">
+                                        Serapan <i class="fa-solid fa-arrows-up-down text-[10px] ml-1 text-slate-400"></i>
+                                    </th>
+                                    <th class="py-3 px-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-kegiatan" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. TABEL KELOMPOK PENDAPATAN -->
+                    <div id="panel-pendapatan" class="hidden">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                                    <th class="py-3 px-4 cursor-pointer" onclick="sortTable('pendapatan', 0)">Kode <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 cursor-pointer" onclick="sortTable('pendapatan', 1)">Kelompok Pendapatan <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-right cursor-pointer" onclick="sortTable('pendapatan', 2)">Anggaran Target (Rp) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-right cursor-pointer" onclick="sortTable('pendapatan', 3)">Realisasi (Rp) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-center cursor-pointer" onclick="sortTable('pendapatan', 4)">Capaian <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-pendapatan" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3. TABEL KELOMPOK PEMBIAYAAN -->
+                    <div id="panel-pembiayaan" class="hidden">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-700 uppercase font-semibold">
+                                    <th class="py-3 px-4 cursor-pointer" onclick="sortTable('pembiayaan', 0)">Kode <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 cursor-pointer" onclick="sortTable('pembiayaan', 1)">Kelompok Pembiayaan <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-right cursor-pointer" onclick="sortTable('pembiayaan', 2)">Anggaran (Rp) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-right cursor-pointer" onclick="sortTable('pembiayaan', 3)">Realisasi (Rp) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-center cursor-pointer" onclick="sortTable('pembiayaan', 4)">Capaian <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                                    <th class="py-3 px-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-pembiayaan" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <!-- Footer Table Info -->
+                <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+                    <div id="table-info-count">Menampilkan data realisasi APBDes Purwosari</div>
+                    <div class="text-right italic">Data terkonfigurasi secara otomatis dari Google Sheet</div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
+            <p>© 2026–2030 Pemerintah Desa Purwosari. Hak Cipta Dilindungi.</p>
+            <p>Diterbitkan secara terbuka melalui GitHub Pages demi Keterbukaan Informasi Publik (KIP).</p>
+        </div>
+    </footer>
+
+    <!-- MODAL RINCIAN DETAIL -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span id="modalCategoryBadge" class="text-[10px] uppercase font-bold bg-brand-500 text-white px-2 py-0.5 rounded">Kegiatan</span>
+                    <h3 class="text-sm font-bold truncate max-w-md" id="modalTitle">Rincian Detail</h3>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <p class="text-[11px] text-slate-500">Total Anggaran</p>
+                        <p class="text-sm font-bold text-slate-900" id="modalAnggaran">Rp 0</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-500">Total Realisasi</p>
+                        <p class="text-sm font-bold text-emerald-600" id="modalRealisasi">Rp 0</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-500">Persentase Capaian</p>
+                        <p class="text-sm font-bold text-blue-600" id="modalCapaian">0%</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Uraian / Sub-Rincian Transaksi Belanja</h4>
+                    <div class="bg-slate-50 rounded-xl border border-slate-200 max-h-60 overflow-y-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-100 border-b border-slate-200 font-semibold text-slate-600">
+                                <tr>
+                                    <th class="p-2.5">Uraian Transaksi / Sumber</th>
+                                    <th class="p-2.5 text-right">Nilai (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalSubItems" class="divide-y divide-slate-200">
+                                <!-- Dynamic Insert Sub Items -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 bg-slate-100 border-t border-slate-200 text-right">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-lg transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EMBEDDED DATASET CSV NATIVE IN HTML (KERANGKA DATA DESA PURWOSARI 2026-2030) -->
+    <script id="embedded-csv-dataset" type="text/csv">
+tahun,kategori,kode,bidang_nama,bidang_sub,nama_item,anggaran,realisasi,rincian
+2026,kegiatan,1.1.2,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Penghasilan Tetap dan Tunjangan Perangkat Desa,779349080,421370167,Siltap Perangkat Desa: Rp 350.000.000;Tunjangan Perangkat: Rp 71.370.167
+2026,kegiatan,1.5.99,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Lain-lain Sub Bidang Pertanahan,250000000,250000000,Sertifikasi Tanah Kas Desa: Rp 250.000.000
+2026,kegiatan,2.8.3,BIDANG PELAKSANAAN PEMBANGUNAN DESA,Bidang 2,Pengembangan Pariwisata Tingkat Desa,1008000000,223490080,Pembangunan Gazebo Wisata: Rp 150.000.000;Penerangan Area Wisata: Rp 73.490.080
+2026,kegiatan,1.1.94,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Tambahan Penghasilan Dari Tanah Pelungguh,200000000,121374637,Pengolahan Hasil Pelungguh: Rp 121.374.637
+2026,kegiatan,1.1.97,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penghasilan Tetap dan Tunjangan Staf Kalurahan,211116400,110209400,Gaji Staf Kalurahan: Rp 110.209.400
+2026,kegiatan,1.1.92,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Tunjangan Hari Raya Bagi Lurah ,Pamong Kalurahan dan Bamuskal,98843000,91998000,THR Pamong Desa: Rp 91.998.000
+2026,kegiatan,1.1.5,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Tunjangan BPD,132300000,77175000,Operasional & Tunjangan Anggota BPD: Rp 77.175.000
+2026,kegiatan,1.1.4,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Operasional Pemerintah Desa (ATK, Honor PKPKD dan PPKD dll),170318214,56780514,Belanja ATK Kantor: Rp 26.780.514;Honorarium Tim PPKD: Rp 30.000.000
+2026,kegiatan,3.1.2,BIDANG PEMBINAAN KEMASYARAKATAN,Bidang 3,Penyelenggaraan Festival Kesenian & Adat Desa,150000000,115000000,Sewa Panggung & Sound System: Rp 65.000.000;Honor Penampil Kesenian: Rp 50.000.000
+2026,kegiatan,4.2.1,BIDANG PEMBERDAYAAN MASYARAKAT,Bidang 4,Pelatihan Manajemen BUMDes & Kelompok Tani,120000000,95000000,Honorarium Narasumber: Rp 35.000.000;Konsumsi & Modul Pelatihan: Rp 60.000.000
+2026,kegiatan,5.1.1,BIDANG PENANGGULANGAN BENCANA, DARURAT DAN MENDESAK DESA,Bidang 5,Penanganan Keadaan Bencana Alam & Mendesak,180000000,45000000,Bantuan Sembako Warga Terdampak: Rp 45.000.000
+2026,pendapatan,4.1,PENDAPATAN ASLI DESA,Bidang 0,Pendapatan Asli Desa (PADes),389000000,127756880,Hasil Usaha BUMDes: Rp 80.000.000;Hasil Tanah Kas Desa: Rp 47.756.880
+2026,pendapatan,4.2,PENDAPATAN TRANSFER,Bidang 0,Pendapatan Transfer (DD, ADD, Bagi Hasil),4330259771,2274947000,Dana Desa (DDS): Rp 1.200.000.000;Alokasi Dana Desa (ADD): Rp 800.000.000;Bagi Hasil Pajak: Rp 274.947.000
+2026,pendapatan,4.3,PENDAPATAN LAIN-LAIN,Bidang 0,Pendapatan Lain-lain Sah,18540000,9381836,Bunga Deposito / Bunga Bank Desa: Rp 9.381.836
+2026,pembiayaan,6.1,PENERIMAAN PEMBIAYAAN,Bidang 0,Penerimaan Pembiayaan (SILPA),646522371,646522371,SILPA Tahun Sebelumnya: Rp 646.522.371
+2026,pembiayaan,6.2,PENGELUARAN PEMBIAYAAN,Bidang 0,Pengeluaran Pembiayaan,0,0,Penyertaan Modal Desa: Rp 0
+2027,kegiatan,1.1.2,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Penghasilan Tetap dan Tunjangan Perangkat Desa,820000000,820000000,Siltap Perangkat Desa: Rp 820.000.000
+2027,kegiatan,2.8.3,BIDANG PELAKSANAAN PEMBANGUNAN DESA,Bidang 2,Pengembangan Pariwisata Tingkat Desa,1100000000,850000000,Pengembangan Agrowisata: Rp 850.000.000
+2027,pendapatan,4.1,PENDAPATAN ASLI DESA,Bidang 0,Pendapatan Asli Desa (PADes),420000000,310000000,Hasil BUMDes: Rp 310.000.000
+2027,pendapatan,4.2,PENDAPATAN TRANSFER,Bidang 0,Pendapatan Transfer (DD, ADD, Bagi Hasil),4500000000,4500000000,Dana Transfer Pemkab: Rp 4.500.000.000
+2027,pembiayaan,6.1,PENERIMAAN PEMBIAYAAN,Bidang 0,Penerimaan Pembiayaan (SILPA),500000000,500000000,SILPA 2026: Rp 500.000.000
+2028,kegiatan,1.1.2,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Penghasilan Tetap dan Tunjangan Perangkat Desa,850000000,850000000,Siltap 2028: Rp 850.000.000
+2028,kegiatan,2.8.3,BIDANG PELAKSANAAN PEMBANGUNAN DESA,Bidang 2,Pengembangan Pariwisata Tingkat Desa,1200000000,1050000000,Pembangunan Wahana Baru: Rp 1.050.000.000
+2028,pendapatan,4.1,PENDAPATAN ASLI DESA,Bidang 0,Pendapatan Asli Desa (PADes),450000000,400000000,PADes 2028: Rp 400.000.000
+2028,pendapatan,4.2,PENDAPATAN TRANSFER,Bidang 0,Pendapatan Transfer (DD, ADD, Bagi Hasil),4700000000,4700000000,Transfer 2028: Rp 4.700.000.000
+2028,pembiayaan,6.1,PENERIMAAN PEMBIAYAAN,Bidang 0,Penerimaan Pembiayaan (SILPA),400000000,400000000,SILPA 2027: Rp 400.000.000
+2029,kegiatan,1.1.2,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Penghasilan Tetap dan Tunjangan Perangkat Desa,880000000,880000000,Siltap 2029: Rp 880.000.000
+2029,kegiatan,2.8.3,BIDANG PELAKSANAAN PEMBANGUNAN DESA,Bidang 2,Pengembangan Pariwisata Tingkat Desa,1300000000,1200000000,Perluasan Area Wisata: Rp 1.200.000.000
+2029,pendapatan,4.1,PENDAPATAN ASLI DESA,Bidang 0,Pendapatan Asli Desa (PADes),500000000,480000000,PADes 2029: Rp 480.000.000
+2029,pendapatan,4.2,PENDAPATAN TRANSFER,Bidang 0,Pendapatan Transfer (DD, ADD, Bagi Hasil),4900000000,4900000000,Transfer 2029: Rp 4.900.000.000
+2029,pembiayaan,6.1,PENERIMAAN PEMBIAYAAN,Bidang 0,Penerimaan Pembiayaan (SILPA),350000000,350000000,SILPA 2028: Rp 350.000.000
+2030,kegiatan,1.1.2,BIDANG PENYELENGGARAAN PEMERINTAHAN DESA,Bidang 1,Penyediaan Penghasilan Tetap dan Tunjangan Perangkat Desa,900000000,900000000,Siltap 2030: Rp 900.000.000
+2030,kegiatan,2.8.3,BIDANG PELAKSANAAN PEMBANGUNAN DESA,Bidang 2,Pengembangan Pariwisata Tingkat Desa,1400000000,1350000000,Fasilitas Smart Village: Rp 1.350.000.000
+2030,pendapatan,4.1,PENDAPATAN ASLI DESA,Bidang 0,Pendapatan Asli Desa (PADes),550000000,530000000,PADes 2030: Rp 530.000.000
+2030,pendapatan,4.2,PENDAPATAN TRANSFER,Bidang 0,Pendapatan Transfer (DD, ADD, Bagi Hasil),5100000000,5100000000,Transfer 2030: Rp 5.100.000.000
+2030,pembiayaan,6.1,PENERIMAAN PEMBIAYAAN,Bidang 0,Penerimaan Pembiayaan (SILPA),300000000,300000000,SILPA 2029: Rp 300.000.000
+    </script>
+
+
+    <!-- JAVASCRIPT LOGIC & DATA PARSER -->
+    <script>
+        // =========================================================================
+        // KONFIGURASI LINK GOOGLE SHEET CSV (PASTE LINK HASIL PUBLISH DI SINI)
+        // =========================================================================
+        // Masukkan URL Google Sheet CSV publik Anda di antara tanda kutip di bawah:
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHcJW8i3LDXEwowq3e9tHQIM-jiRaZRQ1GKaPpu90VoOgZa1iLGRdaLC98e7_hfvagC3_idyAtCL5-/pub?output=csv"; 
+        // Contoh: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ.../pub?output=csv"
+        // Jika dikosongkan (""), dashboard akan otomatis menggunakan dataset cadangan lokal.
+        // =========================================================================
+
+        let currentSelectedYear = "2026";
+        let currentTab = 'kegiatan';
+        let parsedDatabase = {};
+
+        let chartBidangInstance = null;
+        let chartPendapatanInstance = null;
+        let chartPembiayaanInstance = null;
+
+        let sortDirections = {
+            kegiatan: { col: null, asc: true },
+            pendapatan: { col: null, asc: true },
+            pembiayaan: { col: null, asc: true }
+        };
+
+        // --- ADVANCED CSV PARSER (Mendukung baris bertanda kutip & koma) ---
+        function parseCSVToData(csvText) {
+            const lines = csvText.trim().split(/\r?\n/);
+            if (lines.length < 2) return null;
+
+            const database = {
+                "2026": { kegiatan: [], pendapatan: [], pembiayaan: [] },
+                "2027": { kegiatan: [], pendapatan: [], pembiayaan: [] },
+                "2028": { kegiatan: [], pendapatan: [], pembiayaan: [] },
+                "2029": { kegiatan: [], pendapatan: [], pembiayaan: [] },
+                "2030": { kegiatan: [], pendapatan: [], pembiayaan: [] }
+            };
+
+            // Helper splitter CSV yang menangani tanda kutip double
+            const parseCSVLine = (text) => {
+                const result = [];
+                let cell = '';
+                let inQuotes = false;
+                for (let i = 0; i < text.length; i++) {
+                    const c = text[i];
+                    if (c === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (c === ',' && !inQuotes) {
+                        result.push(cell.trim());
+                        cell = '';
+                    } else {
+                        cell += c;
+                    }
+                }
+                result.push(cell.trim());
+                return result;
+            };
+
+            // Skip Header Row 0
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const cols = parseCSVLine(lines[i]);
+                
+                if (cols.length >= 8) {
+                    const thn = cols[0].replace(/"/g, '').trim();
+                    const kat = cols[1].replace(/"/g, '').trim().toLowerCase();
+                    const item = {
+                        kode: cols[2].replace(/"/g, '').trim(),
+                        bidangNama: cols[3].replace(/"/g, '').trim(),
+                        bidangSub: cols[4].replace(/"/g, '').trim(),
+                        nama: cols[5].replace(/"/g, '').trim(),
+                        anggaran: parseFloat(cols[6].replace(/[^0-9.-]+/g, '')) || 0,
+                        realisasi: parseFloat(cols[7].replace(/[^0-9.-]+/g, '')) || 0,
+                        rincian: cols[8] ? cols[8].replace(/"/g, '').trim().split(';') : []
+                    };
+
+                    if (!database[thn]) {
+                        database[thn] = { kegiatan: [], pendapatan: [], pembiayaan: [] };
+                    }
+                    if (database[thn][kat]) {
+                        database[thn][kat].push(item);
+                    }
+                }
+            }
+
+            return database;
+        }
+
+        // --- LOAD DATA (PILIH LIVE GOOGLE SHEET ATAU EMBEDDED) ---
+        async function initData() {
+            const badgeEl = document.getElementById('data-status-badge');
+            
+            // Cek apakah GOOGLE_SHEET_CSV_URL sudah diisi
+            if (GOOGLE_SHEET_CSV_URL && GOOGLE_SHEET_CSV_URL.trim() !== "") {
+                try {
+                    if (badgeEl) {
+                        badgeEl.className = "inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                        badgeEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5 text-[10px]"></i> Menghubungkan Google Sheet...`;
+                    }
+
+                    const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                    if (!response.ok) throw new Error('Gagal mengunduh CSV Google Sheet');
+                    const csvText = await response.text();
+                    
+                    const parsed = parseCSVToData(csvText);
+                    if (parsed && Object.keys(parsed).length > 0) {
+                        parsedDatabase = parsed;
+                        if (badgeEl) {
+                            badgeEl.className = "inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                            badgeEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 text-emerald-400"></i> Live Google Sheet`;
+                        }
+                    } else {
+                        throw new Error('Format CSV tidak sesuai');
+                    }
+                } catch (err) {
+                    console.warn("Gagal memuat Google Sheet Live CSV. Beralih ke data lokal:", err);
+                    loadLocalEmbeddedCSV();
+                    if (badgeEl) {
+                        badgeEl.className = "inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30";
+                        badgeEl.innerHTML = `<i class="fa-solid fa-database mr-1.5 text-blue-400"></i> Data Lokal Cadangan`;
+                    }
+                }
+            } else {
+                // Jika URL kosong, gunakan embedded local CSV
+                loadLocalEmbeddedCSV();
+                if (badgeEl) {
+                    badgeEl.className = "inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600";
+                    badgeEl.innerHTML = `<i class="fa-solid fa-database mr-1.5 text-slate-400"></i> Data Lokal (Offline)`;
+                }
+            }
+
+            // Tampilkan data tahun terpilih setelah parsing selesai
+            loadYearData(currentSelectedYear);
+        }
+
+        function loadLocalEmbeddedCSV() {
+            const rawCsv = document.getElementById('embedded-csv-dataset').innerText.trim();
+            parsedDatabase = parseCSVToData(rawCsv);
+        }
+
+        // --- INIT APP ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initData();
+        });
+
+        // Function Filter Year
+        function changeYearFilter(year) {
+            currentSelectedYear = year;
+            // Update Title Year Text
+            document.getElementById('header-year-title').innerText = year;
+            document.querySelectorAll('.badge-year-text').forEach(el => el.innerText = year);
+            
+            loadYearData(year);
+        }
+
+        // Load data per year and recalculate summary
+        function loadYearData(year) {
+            const dataYear = parsedDatabase[year] || { kegiatan: [], pendapatan: [], pembiayaan: [] };
+
+            // Calculate totals
+            const totAnggaranKegiatan = dataYear.kegiatan.reduce((acc, curr) => acc + curr.anggaran, 0);
+            const totRealisasiKegiatan = dataYear.kegiatan.reduce((acc, curr) => acc + curr.realisasi, 0);
+
+            const totAnggaranPendapatan = dataYear.pendapatan.reduce((acc, curr) => acc + curr.anggaran, 0);
+            const totRealisasiPendapatan = dataYear.pendapatan.reduce((acc, curr) => acc + curr.realisasi, 0);
+
+            const totAnggaranPembiayaan = dataYear.pembiayaan.reduce((acc, curr) => acc + curr.anggaran, 0);
+            const totRealisasiPembiayaan = dataYear.pembiayaan.reduce((acc, curr) => acc + curr.realisasi, 0);
+
+            // Update Summary Cards
+            renderSummaryCards({
+                anggaranPendapatan: totAnggaranPendapatan,
+                realisasiPendapatan: totRealisasiPendapatan,
+                anggaranBelanja: totAnggaranKegiatan,
+                realisasiBelanja: totRealisasiKegiatan,
+                anggaranPembiayaan: totAnggaranPembiayaan,
+                realisasiPembiayaan: totRealisasiPembiayaan
+            });
+
+            // Update Charts
+            initCharts(dataYear);
+
+            // Render Tables
+            renderTables(dataYear);
+        }
+
+        // Format Currency Rupiah
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+        }
+
+        // Render KPI Summary Cards
+        function renderSummaryCards(summary) {
+            const setElemText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+            const setBarWidth = (id, width) => {
+                const el = document.getElementById(id);
+                if (el) el.style.width = width;
+            };
+
+            // Pendapatan
+            const capPendapatan = summary.anggaranPendapatan > 0 ? ((summary.realisasiPendapatan / summary.anggaranPendapatan) * 100).toFixed(2) : '0.00';
+            setElemText('val-anggaran-pendapatan', formatRupiah(summary.anggaranPendapatan));
+            setElemText('val-realisasi-pendapatan', formatRupiah(summary.realisasiPendapatan));
+            setElemText('val-sisa-pendapatan', formatRupiah(summary.anggaranPendapatan - summary.realisasiPendapatan));
+            setElemText('badge-capaian-pendapatan', capPendapatan + '%');
+            setBarWidth('bar-pendapatan', Math.min(capPendapatan, 100) + '%');
+
+            // Belanja
+            const capBelanja = summary.anggaranBelanja > 0 ? ((summary.realisasiBelanja / summary.anggaranBelanja) * 100).toFixed(2) : '0.00';
+            setElemText('val-anggaran-belanja', formatRupiah(summary.anggaranBelanja));
+            setElemText('val-realisasi-belanja', formatRupiah(summary.realisasiBelanja));
+            setElemText('val-sisa-belanja', formatRupiah(summary.anggaranBelanja - summary.realisasiBelanja));
+            setElemText('badge-capaian-belanja', capBelanja + '%');
+            setBarWidth('bar-belanja', Math.min(capBelanja, 100) + '%');
+
+            // Pembiayaan
+            const capPembiayaan = summary.anggaranPembiayaan > 0 ? ((summary.realisasiPembiayaan / summary.anggaranPembiayaan) * 100).toFixed(2) : '100.00';
+            setElemText('val-anggaran-pembiayaan', formatRupiah(summary.anggaranPembiayaan));
+            setElemText('val-realisasi-pembiayaan', formatRupiah(summary.realisasiPembiayaan));
+            setElemText('val-sisa-pembiayaan', formatRupiah(summary.anggaranPembiayaan - summary.realisasiPembiayaan));
+            setElemText('badge-capaian-pembiayaan', capPembiayaan + '%');
+            setBarWidth('bar-pembiayaan', Math.min(capPembiayaan, 100) + '%');
+        }
+
+        // --- CHARTS INITIALIZATION ---
+        function initCharts(dataYear) {
+            // Group realisasi per bidang
+            const bidangColorMap = {
+                "BIDANG PENYELENGGARAAN PEMERINTAHAN DESA": "#10b981",
+                "BIDANG PELAKSANAAN PEMBANGUNAN DESA": "#3b82f6",
+                "BIDANG PEMBINAAN KEMASYARAKATAN": "#f59e0b",
+                "BIDANG PEMBERDAYAAN MASYARAKAT": "#8b5cf6",
+                "BIDANG PENANGGULANGAN BENCANA, DARURAT DAN MENDESAK DESA": "#ef4444"
+            };
+
+            const bidangGroup = {};
+            dataYear.kegiatan.forEach(k => {
+                const bName = k.bidangNama;
+                if (!bidangGroup[bName]) bidangGroup[bName] = 0;
+                bidangGroup[bName] += k.realisasi;
+            });
+
+            const labelsBidang = Object.keys(bidangGroup);
+            const dataBidang = Object.values(bidangGroup);
+            const colorsBidang = labelsBidang.map(l => bidangColorMap[l] || "#94a3b8");
+
+            // Chart 1: Donut Bidang
+            const ctxBidang = document.getElementById('chartBidang').getContext('2d');
+            if (chartBidangInstance) chartBidangInstance.destroy();
+
+            chartBidangInstance = new Chart(ctxBidang, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsBidang,
+                    datasets: [{
+                        data: dataBidang.length > 0 ? dataBidang : [1],
+                        backgroundColor: dataBidang.length > 0 ? colorsBidang : ['#e2e8f0'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function() {
+                                    return '';
+                                },
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    const formattedValue = new Intl.NumberFormat('id-ID').format(value);
+                                    return [
+                                        context.label,
+                                        `Rp ${formattedValue}`,
+                                        `${percentage}%`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Render Custom Legend Bidang
+            const legendContainer = document.getElementById('legend-bidang');
+            legendContainer.innerHTML = labelsBidang.map(b => `
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${bidangColorMap[b] || '#94a3b8'}"></span>
+                    <span class="text-slate-600 text-[11px] font-medium truncate" title="${b}">${b}</span>
+                </div>
+            `).join('');
+
+            // Chart 2: Bar Chart Pendapatan
+            const ctxPendapatan = document.getElementById('chartPendapatan').getContext('2d');
+            const labelsPendapatan = dataYear.pendapatan.map(p => p.nama);
+            const targetPendapatan = dataYear.pendapatan.map(p => p.anggaran);
+            const realisasiPendapatan = dataYear.pendapatan.map(p => p.realisasi);
+
+            if (chartPendapatanInstance) chartPendapatanInstance.destroy();
+
+            chartPendapatanInstance = new Chart(ctxPendapatan, {
+                type: 'bar',
+                data: {
+                    labels: labelsPendapatan,
+                    datasets: [
+                        { label: 'Realisasi', data: realisasiPendapatan, backgroundColor: '#10b981', borderRadius: 6 },
+                        { label: 'Anggaran Target', data: targetPendapatan, backgroundColor: '#e2e8f0', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) { return 'Rp ' + (value / 1000000) + ' Jt'; }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 3: Bar Chart Pembiayaan (Ungu)
+            const ctxPembiayaan = document.getElementById('chartPembiayaan').getContext('2d');
+            const labelsPembiayaan = dataYear.pembiayaan.map(p => p.nama);
+            const targetPembiayaan = dataYear.pembiayaan.map(p => p.anggaran);
+            const realisasiPembiayaan = dataYear.pembiayaan.map(p => p.realisasi);
+
+            if (chartPembiayaanInstance) chartPembiayaanInstance.destroy();
+
+            chartPembiayaanInstance = new Chart(ctxPembiayaan, {
+                type: 'bar',
+                data: {
+                    labels: labelsPembiayaan,
+                    datasets: [
+                        { label: 'Realisasi', data: realisasiPembiayaan, backgroundColor: '#7c3aed', borderRadius: 6 },
+                        { label: 'Anggaran Target', data: targetPembiayaan, backgroundColor: '#e2e8f0', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatRupiah(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    onClick: (e, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            switchTab('pembiayaan');
+                            openDetailModal('pembiayaan', index);
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) { return 'Rp ' + (value / 1000000) + ' Jt'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- TAB SWITCHING LOGIC ---
+        function switchTab(tab) {
+            currentTab = tab;
+            ['kegiatan', 'pendapatan', 'pembiayaan'].forEach(t => {
+                document.getElementById(`panel-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('active');
+            });
+
+            document.getElementById(`panel-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Hide/Show Filter Bidang Header khusus Kegiatan
+            const kegiatanHeader = document.getElementById('section-kegiatan-header');
+            if (tab === 'kegiatan') {
+                kegiatanHeader.classList.remove('hidden');
+            } else {
+                kegiatanHeader.classList.add('hidden');
+            }
+
+            filterTableData();
+        }
+
+        // --- RENDER TABLES ---
+        function renderTables(dataYear) {
+            const dataYearObj = dataYear || parsedDatabase[currentSelectedYear] || { kegiatan: [], pendapatan: [], pembiayaan: [] };
+
+            // 1. Render Kegiatan Belanja (Sesuai Layout Referensi Gambar)
+            const tbodyKegiatan = document.getElementById('tbody-kegiatan');
+            tbodyKegiatan.innerHTML = dataYearObj.kegiatan.map((item, idx) => {
+                const cap = item.anggaran > 0 ? ((item.realisasi / item.anggaran) * 100).toFixed(2) : '0.00';
+                
+                // Color badges matching screenshot: green (>90%), blue/amber (50-90%), amber/red (<50%)
+                let badgeColor = cap >= 90 
+                    ? 'bg-emerald-100 text-emerald-800' 
+                    : cap >= 50 
+                    ? 'bg-amber-100 text-amber-800' 
+                    : 'bg-blue-100 text-blue-800';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3.5 px-3 font-bold text-slate-900 align-top">${item.kode}</td>
+                        <td class="py-3.5 px-3 align-top max-w-xs">
+                            <div class="font-bold text-slate-800 uppercase leading-snug">${item.bidangNama}</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5 font-medium">${item.bidangSub}</div>
+                        </td>
+                        <td class="py-3.5 px-3 text-slate-800 font-medium align-top max-w-sm leading-relaxed">${item.nama}</td>
+                        <td class="py-3.5 px-3 text-right font-medium text-slate-700 whitespace-nowrap align-top">${formatRupiah(item.anggaran)}</td>
+                        <td class="py-3.5 px-3 text-right font-medium text-slate-900 whitespace-nowrap align-top">${formatRupiah(item.realisasi)}</td>
+                        <td class="py-3.5 px-3 text-center align-top">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${badgeColor}">${cap.replace('.', ',')}%</span>
+                        </td>
+                        <td class="py-3.5 px-3 text-center align-top whitespace-nowrap">
+                            <button onclick="openDetailModal('kegiatan', ${idx})" class="text-xs text-sky-600 hover:text-sky-800 font-bold leading-tight flex flex-col items-center mx-auto">
+                                <span>Lihat</span><span>rincian</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // 2. Render Pendapatan
+            const tbodyPendapatan = document.getElementById('tbody-pendapatan');
+            tbodyPendapatan.innerHTML = dataYearObj.pendapatan.map((item, idx) => {
+                const cap = item.anggaran > 0 ? ((item.realisasi / item.anggaran) * 100).toFixed(2) : '0.00';
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3 px-4 font-bold text-slate-800">${item.kode}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">${item.nama}</td>
+                        <td class="py-3 px-4 text-right font-medium text-slate-700">${formatRupiah(item.anggaran)}</td>
+                        <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatRupiah(item.realisasi)}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">${cap}%</span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="openDetailModal('pendapatan', ${idx})" class="text-xs text-sky-600 hover:text-sky-800 font-bold underline">Lihat rincian</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // 3. Render Pembiayaan
+            const tbodyPembiayaan = document.getElementById('tbody-pembiayaan');
+            tbodyPembiayaan.innerHTML = dataYearObj.pembiayaan.map((item, idx) => {
+                const cap = item.anggaran > 0 ? ((item.realisasi / item.anggaran) * 100).toFixed(2) : '100.00';
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <td class="py-3 px-4 font-bold text-slate-800">${item.kode}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">${item.nama}</td>
+                        <td class="py-3 px-4 text-right font-medium text-slate-700">${formatRupiah(item.anggaran)}</td>
+                        <td class="py-3 px-4 text-right font-bold text-amber-600">${formatRupiah(item.realisasi)}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">${cap}%</span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="openDetailModal('pembiayaan', ${idx})" class="text-xs text-sky-600 hover:text-sky-800 font-bold underline">Lihat rincian</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- FILTER & SEARCH TABLE ---
+        function filterTableData() {
+            const searchInputEl = document.getElementById('searchInput');
+            const filterBidangEl = document.getElementById('filterBidang');
+            const filterCapEl = document.getElementById('filterCapaian');
+
+            const query = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+            const selectedBidang = filterBidangEl ? filterBidangEl.value : 'all';
+            const filterCap = filterCapEl ? filterCapEl.value : 'all';
+
+            const rows = document.querySelectorAll(`#tbody-${currentTab} tr`);
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const capCell = row.querySelector('td:nth-child(6)') || row.querySelector('td:nth-child(5)');
+                const capText = capCell ? capCell.innerText.replace('%', '').replace(',', '.') : '0';
+                const capVal = parseFloat(capText);
+
+                let matchesQuery = text.includes(query);
+                let matchesBidang = true;
+                let matchesCap = true;
+
+                // Check filter bidang
+                if (currentTab === 'kegiatan' && selectedBidang !== 'all') {
+                    const bidangCellText = row.querySelector('td:nth-child(2)')?.innerText.toUpperCase() || '';
+                    matchesBidang = bidangCellText.includes(selectedBidang.toUpperCase());
+                }
+
+                // Check filter capaian / serapan
+                if (filterCap === 'high') matchesCap = capVal > 75;
+                else if (filterCap === 'mid') matchesCap = capVal >= 50 && capVal <= 75;
+                else if (filterCap === 'low') matchesCap = capVal < 50;
+
+                if (matchesQuery && matchesBidang && matchesCap) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // --- SORT TABLE ---
+        function sortTable(type, colIndex) {
+            const yearData = parsedDatabase[currentSelectedYear];
+            if (!yearData || !yearData[type]) return;
+
+            const currentDir = sortDirections[type];
+            if (currentDir.col === colIndex) {
+                currentDir.asc = !currentDir.asc;
+            } else {
+                currentDir.col = colIndex;
+                currentDir.asc = true;
+            }
+
+            const getValue = (item, col) => {
+                if (type === 'kegiatan') {
+                    switch(col) {
+                        case 0: return item.kode || '';
+                        case 1: return item.bidangNama || '';
+                        case 2: return item.nama || '';
+                        case 3: return item.anggaran || 0;
+                        case 4: return item.realisasi || 0;
+                        case 5: return item.anggaran > 0 ? (item.realisasi / item.anggaran) * 100 : 0;
+                        default: return '';
+                    }
+                } else {
+                    switch(col) {
+                        case 0: return item.kode || '';
+                        case 1: return item.nama || '';
+                        case 2: return item.anggaran || 0;
+                        case 3: return item.realisasi || 0;
+                        case 4: return item.anggaran > 0 ? (item.realisasi / item.anggaran) * 100 : 0;
+                        default: return '';
+                    }
+                }
+            };
+
+            yearData[type].sort((a, b) => {
+                let valA = getValue(a, colIndex);
+                let valB = getValue(b, colIndex);
+
+                if (typeof valA === 'string') {
+                    return currentDir.asc 
+                        ? valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' })
+                        : valB.localeCompare(valA, undefined, { numeric: true, sensitivity: 'base' });
+                } else {
+                    return currentDir.asc ? valA - valB : valB - valA;
+                }
+            });
+
+            renderTables(yearData);
+            filterTableData();
+        }
+
+        // --- MODAL RINCIAN DETAIL ---
+        function openDetailModal(type, index) {
+            const yearData = parsedDatabase[currentSelectedYear];
+            if (!yearData || !yearData[type] || !yearData[type][index]) return;
+
+            const item = yearData[type][index];
+
+            document.getElementById('modalCategoryBadge').innerText = type.toUpperCase();
+            document.getElementById('modalTitle').innerText = `${item.kode} ${item.nama}`;
+            document.getElementById('modalAnggaran').innerText = formatRupiah(item.anggaran);
+            document.getElementById('modalRealisasi').innerText = formatRupiah(item.realisasi);
+
+            const cap = item.anggaran > 0 ? ((item.realisasi / item.anggaran) * 100).toFixed(2) : '0.00';
+            document.getElementById('modalCapaian').innerText = cap + '%';
+
+            const subContainer = document.getElementById('modalSubItems');
+            if (item.rincian && item.rincian.length > 0) {
+                subContainer.innerHTML = item.rincian.map(r => {
+                    const parts = r.split(':');
+                    return `
+                        <tr>
+                            <td class="p-2.5 text-slate-700">${parts[0]}</td>
+                            <td class="p-2.5 text-right font-bold text-slate-900">${parts[1] || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                subContainer.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-slate-400">Tidak ada rincian tambahan.</td></tr>`;
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // --- EXPORT TO CSV ---
+        function exportToCSV() {
+            const currentData = parsedDatabase[currentSelectedYear][currentTab];
+            if (!currentData) return;
+
+            let csvContent = "data:text/csv;charset=utf-8,Tahun,Kode,Bidang,Nama,Anggaran,Realisasi\n";
+            currentData.forEach(row => {
+                csvContent += `"${currentSelectedYear}","${row.kode}","${row.bidangNama || ''}","${row.nama}",${row.anggaran},${row.realisasi}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Realisasi_${currentTab}_Purwosari_${currentSelectedYear}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
